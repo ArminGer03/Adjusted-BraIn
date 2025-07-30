@@ -1,5 +1,5 @@
 import pickle
-from Utils.NLP.TextPreprocessor import TextPreprocessor
+from src.Utils.NLP.TextPreprocessor import TextPreprocessor
 
 class TFIDFAnalyzer:
     def __init__(self, tfidf_vectorizer_path):

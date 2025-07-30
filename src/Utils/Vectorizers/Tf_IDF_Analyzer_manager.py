@@ -1,4 +1,4 @@
-from Utils.Vectorizers import TFIDFAnalyzer
+from src.Utils.Vectorizers import TFIDFAnalyzer
 
 
 class TfIDF_Analyzer_manager:

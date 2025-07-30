@@ -2,10 +2,10 @@ import json
 
 from tqdm import tqdm
 
-from Utils import JavaSourceParser
-from Utils.IO import JSON_File_IO
-from IR import Searcher
-from Utils.Parser import SourceRefiner
+from src.Utils import JavaSourceParser
+from src.Utils.IO import JSON_File_IO
+from src.IR import Searcher
+from src.Utils.Parser import SourceRefiner
 
 
 def load_dataframe(file_path):

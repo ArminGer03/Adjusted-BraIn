@@ -3,7 +3,7 @@ import os.path
 import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from Utils.IO import JSON_File_IO
+from src.Utils.IO import JSON_File_IO
 
 
 class TfidfVectorizerWithPersistence:
