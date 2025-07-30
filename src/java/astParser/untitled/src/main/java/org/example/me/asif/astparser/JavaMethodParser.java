@@ -1,4 +1,4 @@
-package me.asif.astparser;
+package org.example.me.asif.astparser;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;

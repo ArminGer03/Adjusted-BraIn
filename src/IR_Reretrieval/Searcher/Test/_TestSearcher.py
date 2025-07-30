@@ -20,6 +20,8 @@ class TestSearcher(unittest.TestCase):
         top_K_results = 10
         search_results = self.searcher.search("Apache", "CAMEL", "camel-1.3.0",
                                          "propagated endpoint property propagated settings", top_K_results)
+        print("######")
+        print(len(search_results))
         self.assertEqual(len(search_results), top_K_results)
 
 

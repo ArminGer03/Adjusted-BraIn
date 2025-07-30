@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 
-from IR_Reretrieval.config.ConfigLoader import ConfigLoader
-from IR_Reretrieval.config.Elasic_Config_Loader import Elasic_Config_Loader
+from src.IR_Reretrieval.config.ConfigLoader import ConfigLoader
+from src.IR_Reretrieval.config.Elasic_Config_Loader import Elasic_Config_Loader
 
 '''
     CAUTION:

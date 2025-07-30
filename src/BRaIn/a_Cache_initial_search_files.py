@@ -136,7 +136,7 @@ if __name__ == '__main__':
             bug['es_results'] = processed_results
 
         # save the json to a file
-        json_save_path = "D:\Research\Coding\QueryReformulation_MAIN\Output\Expansion_Query\cached_methods\Chunked_50_2"
+        json_save_path = "cached_methods"
         #use chunk_id to save the file
         JSON_File_IO.save_Dict_to_JSON(json_bugs, json_save_path, "Cache_Res50_C"+str(chunk_id)+".json")
         chunk_id += 1

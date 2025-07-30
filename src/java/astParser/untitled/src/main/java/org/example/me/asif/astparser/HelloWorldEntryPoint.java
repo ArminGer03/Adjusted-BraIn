@@ -1,4 +1,4 @@
-package me.asif.astparser;
+package org.example.me.asif.astparser;
 
 import py4j.GatewayServer;
 

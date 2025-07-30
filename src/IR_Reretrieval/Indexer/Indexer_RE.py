@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch, helpers
 
-from IR_Reretrieval.config.Elasic_Config_Loader import Elasic_Config_Loader
+from src.IR_Reretrieval.config.Elasic_Config_Loader import Elasic_Config_Loader
 
 
 class Indexer_RE:
