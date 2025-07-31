@@ -29,27 +29,10 @@ class Searcher:
                                        verify_certs=False,
                                        request_timeout=10000)
 
-    # def search(self, query, top_K_results=10):
-    #     search_query = {
-    #         "query": {
-    #             "multi_match": {
-    #                 "query": query,
-    #                 "fields": ["source_code"]
-    #             }
-    #         },
-    #         "size": top_K_results,
-    #         "_source": ["file_url"]
-    #     }
-    #
-    #     search_results = self.es_client.search(index=self.index_name, body=search_query)
-    #
-    #     ground_truths = self.compiled_search_results(search_results)
-    #
-    #     return ground_truths
-
     def getElasicSearchClient(self):
         return self.es_client
 
+    # TODO
     def search(self, project, sub_project, version, query, top_K_results=10):
         search_query = {
                 "bool": {
@@ -99,6 +82,7 @@ class Searcher:
 
         return results_file_urls
 
+    # TODO: This must be adjusted for Part C of BraIn to work with ye et al dataset
     def search_field(self, project, sub_project, version, field_to_search, top_K_results=10, field_to_return = ["file_url"]):
         search_query = {
                 "bool": {
@@ -149,7 +133,7 @@ class Searcher:
 
         return result_dict_arr
 
-
+    # TODO
     def search_Extended(self, project, sub_project, version, query, top_K_results=10, field_to_return=["file_url"]):
         search_query = {
                 "bool": {
@@ -225,9 +209,8 @@ if __name__ == '__main__':
 
     # Search for a query
     top_K_results = 10
+    # TODO
     search_results = searcher.search("Apache", "CAMEL", "camel-1.4.0", "org.apache.camel.Message - hasAttachments is buggy I must use\n                        if (exchange.getIn().getAttachments().size() > 0) {\nInstead of\n                        if (exchange.getIn().hasAttachments()) {\nAs the latter always returns false. Or at least returns false even though the size is > 0", 10)
-
-    # search_results = searcher.search_Extended("Apache", "CAMEL", "camel-1.3.0", "propagated endpoint property propagated settings", 20, field_to_return=['project', 'sub_project', 'version', 'source_code', 'file_url'])
 
     # Print the search results
     print(search_results)

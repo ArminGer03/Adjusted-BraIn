@@ -83,6 +83,7 @@ class Index_Creator:
         # Check if the index has been created successfully
         if self.es_client.indices.exists(index=self.index_name):
             print(f"The index '{self.index_name}' was created successfully.")
+            # TODO: index each document
         else:
             print(f"Failed to create the index '{self.index_name}'.")
 

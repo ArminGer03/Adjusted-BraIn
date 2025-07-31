@@ -1,5 +1,6 @@
 elasticsearch:
   host: localhost # default: please don't change this if not necessary
+  #TODO
   port: 9200 # default: please don't change this if not necessary
   index_name: bench4bl # NECESSARY: change this to your index name.
 #  index_name: bench4bl_full_100 # NECESSARY: change this to your index name.
@@ -7,6 +8,7 @@ elasticsearch:
 #  index_name: bench4blsum # NECESSARY: change this to your index name.
 #  index_name: bench4blaj # NECESSARY: change this to your index name.
 
+#TODO
 Fields:
   project: keyword
   sub_project: keyword

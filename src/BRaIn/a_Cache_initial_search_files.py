@@ -7,7 +7,7 @@ from src.Utils import JavaSourceParser
 from src.Utils.IO import JSON_File_IO
 from src.Utils.Parser import SourceRefiner
 
-
+#TODO
 def load_dataframe(file_path):
     return JSON_File_IO.load_JSON_to_Dataframe(file_path)
 
@@ -15,7 +15,7 @@ def load_dataframe(file_path):
 def load_json_to_dict(file_path):
     return JSON_File_IO.load_JSON_to_Dict(file_path)
 
-
+#TODO
 def perform_search(project, sub_project, version, bug_title, bug_description, top_K_results=10):
     searcher = Searcher('bench4bl')
     search_results = searcher.search_Extended(
@@ -90,14 +90,16 @@ gateway = JavaGateway()  # connect to the JVM
 java_py4j_ast_parser = gateway.entry_point.getJavaMethodParser()  # get the HelloWorld instance
 
 if __name__ == '__main__':
-    # sample_path = "D:\Research\Coding\Replication_Package\BRaIn\Data"
+    # TODO
     sample_path = "../../Data/Refined_B4BL.json"
     # load the json to dictionary
     df = load_dataframe(sample_path)
 
+    # TODO
     # convert this to json string
     json_string = JSON_File_IO.convert_Dataframe_to_JSON_string(df)
 
+    # TODO: check
     # iterate over the json string
     json_bugs = json.loads(json_string)
 
@@ -113,7 +115,8 @@ if __name__ == '__main__':
     for json_bugs in tqdm(json_bugs_chunked, desc="Processing JSON Bugs Chunked"):
         # iterate over the json array
         for bug in tqdm(json_bugs, desc="Processing JSON Bugs"):
-        # for bug in json_bugs:
+            # for bug in json_bugs:
+            # TODO
             bug_title = bug['bug_title']
             bug_description = bug['bug_description']
             project = bug['project']
