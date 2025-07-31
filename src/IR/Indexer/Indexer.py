@@ -29,12 +29,9 @@ class Indexer:
                                   # http_auth=("username", "password"),
                                   verify_certs=False)
 
-    # TODO
-    def index(self, project, sub_project, version, source_code, file_url):
+    def index(self, project, source_code, file_url):
         document = {
             "project": project,
-            "sub_project": sub_project,
-            "version": version,
             "source_code": source_code,
             "file_url": file_url
         }
@@ -48,12 +45,9 @@ class Indexer:
         for document in self.bulk_index_array:
             yield document
 
-    # function for bulk indexing. it is same as before. saves the doc in array and when it reaches the limit, it indexes them in bulk
-    def bulk_index(self, project, sub_project, version, source_code, file_url, bulk_size=1024):
+    def bulk_index(self, project, source_code, file_url, bulk_size=1024):
         document = {
             "project": project,
-            "sub_project": sub_project,
-            "version": version,
             "source_code": source_code,
             "file_url": file_url
         }
