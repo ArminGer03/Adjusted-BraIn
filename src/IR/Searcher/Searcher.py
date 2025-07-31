@@ -32,8 +32,7 @@ class Searcher:
     def getElasicSearchClient(self):
         return self.es_client
 
-    # TODO
-    def search(self, project, sub_project, version, query, top_K_results=10):
+    def search(self, project, query, top_K_results=10):
         search_query = {
                 "bool": {
                     "must": [
@@ -41,28 +40,10 @@ class Searcher:
                             "match": {
                                 "project": project
                             }
-                        },
-                        {
-                            "match": {
-                                "sub_project": sub_project
-                            }
-                        },
-                        {
-                            "match": {
-                                "version": version
-                            }
                         }
                     ],
                     "should": [
                         {
-                            # we are not searching in multiple fields. only in source_code
-                            # "multi_match": {
-                            #     "query": query,
-                            #     "fields": ["source_code"]
-                            # }
-                            # "match": {
-                            #     "source_code": query
-                            # }
                             "match": {
                                 "source_code": {
                                     "query": query,
@@ -82,24 +63,13 @@ class Searcher:
 
         return results_file_urls
 
-    # TODO: This must be adjusted for Part C of BraIn to work with ye et al dataset
-    def search_field(self, project, sub_project, version, field_to_search, top_K_results=10, field_to_return = ["file_url"]):
+    def search_field(self, project, field_to_search, top_K_results=10, field_to_return = ["file_url"]):
         search_query = {
                 "bool": {
                     "must": [
                         {
                             "match": {
                                 "project": project
-                            }
-                        },
-                        {
-                            "match": {
-                                "sub_project": sub_project
-                            }
-                        },
-                        {
-                            "match": {
-                                "version": version
                             }
                         },
                         {
@@ -123,18 +93,11 @@ class Searcher:
             for field in field_to_return:
                 temp_dict[field] = source.get(field)
 
-            # project = source.get("project")
-            # sub_project = source.get("sub_project")
-            # version = source.get("version")
-            # source_code = source.get("source_code")
-            # file_url = source.get("file_url")
-
             result_dict_arr.append(temp_dict)
 
         return result_dict_arr
 
-    # TODO
-    def search_Extended(self, project, sub_project, version, query, top_K_results=10, field_to_return=["file_url"]):
+    def search_Extended(self, project, query, top_K_results=10, field_to_return=["file_url"]):
         search_query = {
                 "bool": {
                     "must": [
@@ -142,25 +105,10 @@ class Searcher:
                             "match": {
                                 "project": project
                             }
-                        },
-                        {
-                            "match": {
-                                "sub_project": sub_project
-                            }
-                        },
-                        {
-                            "match": {
-                                "version": version
-                            }
                         }
                     ],
                     "should": [
                         {
-                            # we are not searching in multiple fields. only in source_code
-                            # "multi_match": {
-                            #     "query": query,
-                            #     "fields": ["source_code"]
-                            # }
                             "match": {
                                 "source_code": query
                             }
@@ -179,13 +127,11 @@ class Searcher:
             doc_id = hit.get("_id")
             source = hit.get("_source", {})
             project = source.get("project")
-            sub_project = source.get("sub_project")
-            version = source.get("version")
             source_code = source.get("source_code")
             file_url = source.get("file_url")
             bm_score = hit.get("_score")
 
-            result_dict.append({"project": project, "sub_project": sub_project, "version": version, "source_code": source_code, "file_url": file_url, "doc_id": doc_id, "bm25_score": bm_score})
+            result_dict.append({"project": project, "source_code": source_code, "file_url": file_url, "doc_id": doc_id, "bm25_score": bm_score})
 
         return result_dict
 
@@ -209,8 +155,7 @@ if __name__ == '__main__':
 
     # Search for a query
     top_K_results = 10
-    # TODO
-    search_results = searcher.search("Apache", "CAMEL", "camel-1.4.0", "org.apache.camel.Message - hasAttachments is buggy I must use\n                        if (exchange.getIn().getAttachments().size() > 0) {\nInstead of\n                        if (exchange.getIn().hasAttachments()) {\nAs the latter always returns false. Or at least returns false even though the size is > 0", 10)
+    search_results = searcher.search("aspectj", "AjBuildManager", 10)
 
     # Print the search results
     print(search_results)

@@ -1,4 +1,6 @@
 import json
+import xml.etree.ElementTree as ET
+import re
 
 from tqdm import tqdm
 
@@ -7,29 +9,73 @@ from src.Utils import JavaSourceParser
 from src.Utils.IO import JSON_File_IO
 from src.Utils.Parser import SourceRefiner
 
-#TODO
-def load_dataframe(file_path):
-    return JSON_File_IO.load_JSON_to_Dataframe(file_path)
+def parse_xml_dataset(file_path):
+    """
+    Parse the ye_et_al XML dataset format
+    """
+    print(f"Parsing XML dataset from: {file_path}")
+    
+    # Read the XML file
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Parse the XML content
+    root = ET.fromstring(content)
+    
+    bugs = []
+    
+    # Find all table elements (each represents a bug)
+    for table in root.findall('.//table'):
+        bug = {}
+        
+        # Extract data from column elements
+        for column in table.findall('column'):
+            name = column.get('name')
+            value = column.text.strip() if column.text else ""
+            
+            if name == 'bug_id':
+                bug['bug_id'] = value
+            elif name == 'summary':
+                bug['bug_title'] = value
+            elif name == 'description':
+                bug['bug_description'] = value
+            elif name == 'files':
+                # Parse files field - it contains file paths separated by whitespace
+                files = [f.strip() for f in value.split() if f.strip()]
+                bug['fixed_files'] = files
+            elif name == 'result':
+                # Parse result field - contains file:line_number format
+                results = []
+                for line in value.split('\n'):
+                    line = line.strip()
+                    if ':' in line:
+                        parts = line.split(':', 1)
+                        if len(parts) == 2:
+                            file_path = parts[0].strip()
+                            line_number = parts[1].strip()
+                            results.append({
+                                'file': file_path,
+                                'line': line_number
+                            })
+                bug['result'] = results
+        
+        # Only add bugs that have the required fields
+        if 'bug_id' in bug and 'bug_title' in bug and 'bug_description' in bug:
+            bugs.append(bug)
+    
+    print(f"Parsed {len(bugs)} bugs from XML dataset")
+    return bugs
 
-
-def load_json_to_dict(file_path):
-    return JSON_File_IO.load_JSON_to_Dict(file_path)
-
-#TODO
-def perform_search(project, sub_project, version, bug_title, bug_description, top_K_results=10):
-    searcher = Searcher('bench4bl')
+def perform_search(project, bug_title, bug_description, top_K_results=10):
+    searcher = Searcher('ye_et_al')  # Use the ye_et_al index
     search_results = searcher.search_Extended(
         project=project,
-        sub_project=sub_project,
-        version=version,
         query=bug_title + '. ' + bug_description,
         top_K_results=top_K_results,
         field_to_return=["file_url", "source_code"]
     )
 
-    # print(search_results)
     return search_results
-
 
 def search_result_ops(search_results):
     processed_results = []
@@ -37,7 +83,6 @@ def search_result_ops(search_results):
         file_url = result['file_url']
         source_code = result['source_code']
         bm25_score = result['bm25_score']
-
 
         json_result = java_py4j_ast_parser.processJavaFileContent(source_code)
 
@@ -69,8 +114,6 @@ def search_result_ops(search_results):
                 else:
                     parsed_methods[method_name] = 'Class: '+ class_name + ' \n Method: ' + method_body
 
-
-
         # create a json object with file_url and parsed_methods
         json_object = {
             'file_url': file_url,
@@ -82,62 +125,54 @@ def search_result_ops(search_results):
 
     return processed_results
 
-
-
 from py4j.java_gateway import JavaGateway
 
 gateway = JavaGateway()  # connect to the JVM
 java_py4j_ast_parser = gateway.entry_point.getJavaMethodParser()  # get the HelloWorld instance
 
 if __name__ == '__main__':
-    # TODO
-    sample_path = "../../Data/Refined_B4BL.json"
-    # load the json to dictionary
-    df = load_dataframe(sample_path)
+    # Parse the aspectj XML dataset
+    xml_path = "../../Data/ye et al/aspectj.xml"
+    bugs = parse_xml_dataset(xml_path)
+    
+    # Set project name for all bugs
+    project_name = "aspectj"
+    
+    # Add project name to each bug
+    for bug in bugs:
+        bug['project'] = project_name
 
-    # TODO
-    # convert this to json string
-    json_string = JSON_File_IO.convert_Dataframe_to_JSON_string(df)
+    chunk_size = 100  # Smaller chunk size for XML dataset
+    bugs_chunked = []
 
-    # TODO: check
-    # iterate over the json string
-    json_bugs = json.loads(json_string)
-
-    chunk_size = 2350
-    json_bugs_chunked = []
-
-    # chunk the json_bugs up to chunk size or up to last if less than 1000
-    for i in range(0, len(json_bugs), chunk_size):
-        json_bugs_chunked.append(json_bugs[i:i + chunk_size])
+    # chunk the bugs up to chunk size
+    for i in range(0, len(bugs), chunk_size):
+        bugs_chunked.append(bugs[i:i + chunk_size])
 
     chunk_id = 1
-    # iterate over the json_bugs_chunked
-    for json_bugs in tqdm(json_bugs_chunked, desc="Processing JSON Bugs Chunked"):
-        # iterate over the json array
-        for bug in tqdm(json_bugs, desc="Processing JSON Bugs"):
-            # for bug in json_bugs:
-            # TODO
+    # iterate over the bugs_chunked
+    for bug_chunk in tqdm(bugs_chunked, desc="Processing Bug Chunks"):
+        # iterate over the bugs in each chunk
+        for bug in tqdm(bug_chunk, desc="Processing Bugs"):
             bug_title = bug['bug_title']
             bug_description = bug['bug_description']
             project = bug['project']
-            sub_project = bug['sub_project']
-            version = bug['version']
 
             # now search for the query in a method
-            search_results = perform_search(project, sub_project, version, bug_title, bug_description, top_K_results=50)
+            search_results = perform_search(project, bug_title, bug_description, top_K_results=50)
 
             # now, perform ops in the search results
             processed_results = search_result_ops(search_results)
 
-            # add processed results to the json as a new key
+            # add processed results to the bug as a new key
             bug['es_results'] = processed_results
 
-        # save the json to a file
+        # save the chunk to a file
         json_save_path = "cached_methods"
         #use chunk_id to save the file
-        JSON_File_IO.save_Dict_to_JSON(json_bugs, json_save_path, "Cache_Res50_C"+str(chunk_id)+".json")
+        JSON_File_IO.save_Dict_to_JSON(bug_chunk, json_save_path, f"Cache_Res50_C{chunk_id}.json")
         chunk_id += 1
 
-        # empty the json_bugs from memory after saving to save memory
-        json_bugs = []
+        # empty the bug_chunk from memory after saving to save memory
+        bug_chunk = []
 

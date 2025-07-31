@@ -117,7 +117,7 @@ class Index_Creator:
                         
                         # Get the relative file URL (path from source_code_path)
                         file_url = os.path.relpath(file_path, source_code_path)
-                        print(file_url)
+                        # print(file_url)
                         # Index the file using bulk indexing for better performance
                         indexer.bulk_index(
                             project=project_name,
@@ -140,8 +140,7 @@ class Index_Creator:
 if __name__ == '__main__':
     index_creator = Index_Creator()
     index_creator.create_index(delete_if_exists=True)
-    
-    
-    source_code_path = ""
+
+    source_code_path = "/Users/armin/Desktop/aspectj-master"
     project_name = "aspectj"
     index_creator.index_source_code(source_code_path, project_name)
