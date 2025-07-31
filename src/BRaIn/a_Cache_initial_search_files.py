@@ -2,9 +2,9 @@ import json
 
 from tqdm import tqdm
 
+from src.IR import Searcher
 from src.Utils import JavaSourceParser
 from src.Utils.IO import JSON_File_IO
-from src.IR import Searcher
 from src.Utils.Parser import SourceRefiner
 
 
@@ -89,17 +89,11 @@ from py4j.java_gateway import JavaGateway
 gateway = JavaGateway()  # connect to the JVM
 java_py4j_ast_parser = gateway.entry_point.getJavaMethodParser()  # get the HelloWorld instance
 
-
-
-import html
-
 if __name__ == '__main__':
     # sample_path = "D:\Research\Coding\Replication_Package\BRaIn\Data"
     sample_path = "../../Data/Refined_B4BL.json"
     # load the json to dictionary
     df = load_dataframe(sample_path)
-
-
 
     # convert this to json string
     json_string = JSON_File_IO.convert_Dataframe_to_JSON_string(df)

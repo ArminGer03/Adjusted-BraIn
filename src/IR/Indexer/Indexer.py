@@ -38,7 +38,7 @@ class Indexer:
             "file_url": file_url
         }
         result = self.es_client.index(index=self.index_name, body=document, refresh=False)
-        # print(f"Indexed document with ID: {result['_id']}")
+        print(f"Indexed document with ID: {result['_id']}")
 
         return result
 
