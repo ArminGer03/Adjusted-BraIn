@@ -7,7 +7,7 @@ from tqdm import tqdm
 from src.IR import Searcher
 from src.Utils import JavaSourceParser
 from src.Utils.IO import JSON_File_IO
-from src.Utils.Parser import SourceRefiner
+from src.Utils.Parser.JavaSourceParser import clear_formatting
 
 def parse_xml_dataset(file_path):
     """
@@ -84,35 +84,46 @@ def search_result_ops(search_results):
         source_code = result['source_code']
         bm25_score = result['bm25_score']
 
-        json_result = java_py4j_ast_parser.processJavaFileContent(source_code)
+        try:
+            json_result = java_py4j_ast_parser.processJavaFileContent(source_code)
 
-        if json_result is None or json_result == '':
-            # parse the source code if py4j fails
-            javaParser = JavaSourceParser(data=source_code)
-            parsed_methods = javaParser.parse_methods()
+            if json_result is None or json_result == '':
+                # parse the source code if py4j fails
+                try:
+                    javaParser = JavaSourceParser(data=source_code)
+                    parsed_methods = javaParser.parse_methods()
+                except Exception as e:
+                    print(f"Warning: Could not parse Java file {file_url} with JavaSourceParser: {e}")
+                    # Skip this file if parsing fails
+                    continue
 
-        else:
-            loaded_json = json.loads(json_result)
-            parsed_methods = {}
+            else:
+                loaded_json = json.loads(json_result)
+                parsed_methods = {}
 
-            poly_morphism = 1
-            # iterate over the parsed methods and get the method names and the method bodies
-            for method in loaded_json:
+                poly_morphism = 1
+                # iterate over the parsed methods and get the method names and the method bodies
+                for method in loaded_json:
 
-                method_name = method['member_name']
-                method_body = method['member_body']
-                class_name = method['class_name']
+                    method_name = method['member_name']
+                    method_body = method['member_body']
+                    class_name = method['class_name']
 
-                # clear the formatting of the method body for tokenization
-                method_body = SourceRefiner.clear_formatting(method_body)
+                    # clear the formatting of the method body for tokenization
+                    method_body = clear_formatting(method_body)
 
-                # check if the method name is already in the parsed_methods
-                if method_name in parsed_methods:
-                    # append the method body to the existing method name
-                    parsed_methods[method_name+'!P'+str(poly_morphism)] = 'Class: '+ class_name + ' \n Method: ' + method_body
-                    poly_morphism += 1
-                else:
-                    parsed_methods[method_name] = 'Class: '+ class_name + ' \n Method: ' + method_body
+                    # check if the method name is already in the parsed_methods
+                    if method_name in parsed_methods:
+                        # append the method body to the existing method name
+                        parsed_methods[method_name+'!P'+str(poly_morphism)] = 'Class: '+ class_name + ' \n Method: ' + method_body
+                        poly_morphism += 1
+                    else:
+                        parsed_methods[method_name] = 'Class: '+ class_name + ' \n Method: ' + method_body
+
+        except Exception as e:
+            print(f"Warning: Could not process Java file {file_url}: {e}")
+            # Skip this file if processing fails
+            continue
 
         # create a json object with file_url and parsed_methods
         json_object = {

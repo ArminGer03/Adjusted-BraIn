@@ -1,8 +1,8 @@
 import re
 
 import javalang as jl
-from .SourceRefiner import clear_formatting
-# from SourceRefiner import clear_formatting
+# from .SourceRefiner import clear_formatting
+from SourceRefiner import clear_formatting
 
 class JavaSourceParser:
     def __init__(self, data, clear_formatting=False):
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
         public void isTrue() {
             int defIsTrue;
-            System.out.println("bar");
+            System.out.println(STR."\{firstName} \{lastName}");
         }
     }'''
 

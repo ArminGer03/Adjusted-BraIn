@@ -13,8 +13,10 @@ def __replace_multiple_whitespace(input_string):
 
     return output_string
 
+
 def clear_formatting(input_string):
     return __replace_multiple_whitespace(input_string)
+
 
 if __name__ == '__main__':
     # Example usage
