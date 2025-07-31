@@ -1,16 +1,69 @@
 import re
 
 import javalang as jl
-# from .SourceRefiner import clear_formatting
-from SourceRefiner import clear_formatting
+from .SourceRefiner import clear_formatting
+# from SourceRefiner import clear_formatting
 
 class JavaSourceParser:
     def __init__(self, data, clear_formatting=False):
-        self.data = data
-        self.tree = jl.parse.parse(data)
+        self.original_data = data
+        # Preprocess the data to handle unsupported Java syntax
+        self.data = self.preprocess_java_code(data)
+        try:
+            self.tree = jl.parse.parse(self.data)
+        except Exception as e:
+            # If parsing still fails, try with more aggressive preprocessing
+            self.data = self.preprocess_java_code_aggressive(data)
+            self.tree = jl.parse.parse(self.data)
         self.methods = {}
         self.fields = set()
         self.clear_formatting = clear_formatting
+
+    def preprocess_java_code(self, code):
+        """
+        Preprocess Java code to handle syntax that javalang doesn't support
+        """
+        # Handle complex nested string templates like STR."\{var}, \{STR."\{var2}"}"
+        # Replace with simple string literals that javalang can parse
+        code = re.sub(r'STR\."([^"]*\\\{[^}]*\}[^"]*)*"', r'"string_template_placeholder"', code)
+        
+        # Handle any remaining STR." patterns
+        code = re.sub(r'STR\."[^"]*"', r'"string_template_placeholder"', code)
+        
+        # Handle standalone \{var} patterns
+        code = re.sub(r'\\\{([^}]+)\}', r'\\1', code)
+        
+        # Handle any remaining problematic escape sequences
+        code = re.sub(r'\\([^"\\nrtbf])', r'\\\\\\1', code)
+        
+        # Handle text blocks (triple quotes) if present
+        code = re.sub(r'"""([^"]*)"""', r'"text_block_placeholder"', code)
+        
+        # Handle record patterns and other modern Java features
+        code = re.sub(r'record\s+\w+\s*\([^)]*\)', r'class RecordPlaceholder', code)
+        
+        # Handle switch expressions
+        code = re.sub(r'->\s*\{[^}]*\}', r'-> {}', code)
+        
+        return code
+
+    def preprocess_java_code_aggressive(self, code):
+        """
+        More aggressive preprocessing for problematic Java code
+        """
+        # Remove or comment out problematic lines
+        lines = code.split('\n')
+        processed_lines = []
+        
+        for line in lines:
+            # Skip lines with string templates or other problematic syntax
+            if any(pattern in line for pattern in ['STR."', '\\{', '"""', 'record ', '-> {']):
+                # Comment out the problematic line
+                processed_lines.append('// ' + line)
+            else:
+                processed_lines.append(line)
+        
+        return '\n'.join(processed_lines)
 
     def get_start_end_for_node(self, node_to_find):
         start = None
@@ -31,7 +84,7 @@ class JavaSourceParser:
         if end is not None:
             end_pos = end.line - 1
 
-        lines = self.data.splitlines(True)
+        lines = self.original_data.splitlines(True)  # Use original data for string extraction
         string = "".join(lines[start.line:end_pos])
         string = lines[start.line - 1] + string
 
@@ -85,8 +138,14 @@ class JavaSourceParser:
         return re.sub('([a-z])([A-Z])', r'\1 \2', identifier).split()
 
     def parse_class_method_field_name(self, java_code):
-
-        tree = jl.parse.parse(java_code)
+        # Preprocess the code before parsing
+        processed_code = self.preprocess_java_code(java_code)
+        try:
+            tree = jl.parse.parse(processed_code)
+        except Exception as e:
+            # If parsing fails, try with aggressive preprocessing
+            processed_code = self.preprocess_java_code_aggressive(java_code)
+            tree = jl.parse.parse(processed_code)
 
         class_names = []
         method_names = []

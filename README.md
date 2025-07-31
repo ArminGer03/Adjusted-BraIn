@@ -1,5 +1,7 @@
 # BRaIn
 
+> **Note**: This is a clone of the original BRaIn repository, modified to work with the Ye et al. dataset. The code has been adjusted to handle XML format instead of JSON and simplified schema without sub_project/version fields.
+
 ## Improved IR-based Bug Localization with Intelligent Relevance Feedback [📎](https://arxiv.org/abs/2501.10542)
 Accepted Paper at ICPC 2025 \
 [Pre-print](https://arxiv.org/abs/2501.10542)
