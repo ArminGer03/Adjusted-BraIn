@@ -120,6 +120,70 @@ class Index_Creator:
         print(f"Found {len(commits_list)} unique commits in dataset")
         return commits_list
 
+    def index_all_projects_from_dataset(self, base_repo_path, base_dataset_path):
+        """
+        Index all projects from the ye et al dataset
+        :param base_repo_path: Base path containing all project repositories
+        :param base_dataset_path: Base path containing all XML dataset files
+        """
+        print(f"Starting to index all projects from ye et al dataset")
+        print(f"Base repository path: {base_repo_path}")
+        print(f"Base dataset path: {base_dataset_path}")
+        
+        # Define the projects and their corresponding dataset files
+        projects = {
+            'aspectj': 'aspectj.xml',
+            'eclipse': 'eclipse.xml', 
+            'birt': 'birt.xml',
+            'swt': 'swt.xml',
+            'jdt': 'jdt.xml',
+            'tomcat': 'tomcat.xml'
+        }
+        
+        total_successful_projects = 0
+        total_failed_projects = 0
+        
+        for project_name, dataset_file in projects.items():
+            print(f"\n{'='*50}")
+            print(f"Processing project: {project_name}")
+            print(f"{'='*50}")
+            
+            # Construct paths
+            repo_path = os.path.join(base_repo_path, project_name)
+            dataset_path = os.path.join(base_dataset_path, dataset_file)
+            
+            # Check if repository exists
+            if not os.path.exists(repo_path):
+                print(f"Repository path does not exist: {repo_path}")
+                print(f"Skipping project {project_name}")
+                total_failed_projects += 1
+                continue
+            
+            # Check if dataset file exists
+            if not os.path.exists(dataset_path):
+                print(f"Dataset file does not exist: {dataset_path}")
+                print(f"Skipping project {project_name}")
+                total_failed_projects += 1
+                continue
+            
+            try:
+                success = self.index_all_commits_from_dataset(repo_path, project_name, dataset_path)
+                if success:
+                    total_successful_projects += 1
+                else:
+                    total_failed_projects += 1
+            except Exception as e:
+                print(f"Error processing project {project_name}: {e}")
+                total_failed_projects += 1
+                continue
+        
+        print(f"\n{'='*50}")
+        print(f"ALL PROJECTS INDEXING COMPLETED!")
+        print(f"{'='*50}")
+        print(f"Successfully indexed: {total_successful_projects} projects")
+        print(f"Failed to index: {total_failed_projects} projects")
+        print(f"Total projects processed: {total_successful_projects + total_failed_projects}")
+
     def index_all_commits_from_dataset(self, source_code_path, project_name, xml_dataset_path):
         """
         Index source code for all commits found in the dataset
@@ -143,7 +207,7 @@ class Index_Creator:
         successful_indexes = 0
         failed_indexes = 0
         
-        for commit in tqdm(commits, desc="Indexing commits"):
+        for commit in tqdm(commits, desc=f"Indexing commits for {project_name}"):
             try:
                 success = self.index_source_code_for_commit(source_code_path, project_name, commit)
                 if success:
@@ -155,7 +219,7 @@ class Index_Creator:
                 failed_indexes += 1
                 continue
         
-        print(f"Indexing completed!")
+        print(f"Indexing completed for {project_name}!")
         print(f"Successfully indexed: {successful_indexes} commits")
         print(f"Failed to index: {failed_indexes} commits")
         
@@ -271,8 +335,7 @@ if __name__ == '__main__':
     index_creator = Index_Creator()
     index_creator.create_index(delete_if_exists=True)
     
-    # Index all commits from the dataset
-    source_code_path = "/Users/armin/Desktop/test-aspect/aspectj"
-    project_name = "aspectj"
-    xml_dataset_path = "/Users/armin/Desktop/UCI/bug-localization-project/Codes/Adjusted-BRaIn/Adjusted-BraIn/Data/ye et al/aspectj.xml"
-    index_creator.index_all_commits_from_dataset(source_code_path, project_name, xml_dataset_path)
+    # Index all projects from the dataset
+    base_repo_path = "/Users/armin/Desktop/source_codes"  # Base path containing all project repositories with projects in each direcotry same as the name in ye et al dataset
+    base_dataset_path = "/Users/armin/Desktop/UCI/bug-localization-project/Codes/Adjusted-BRaIn/Adjusted-BraIn/Data/ye et al"
+    index_creator.index_all_projects_from_dataset(base_repo_path, base_dataset_path)
