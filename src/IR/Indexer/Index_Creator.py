@@ -89,9 +89,65 @@ class Index_Creator:
         else:
             print(f"Failed to create the index '{self.index_name}'.")
 
+    def index_source_code_for_commit(self, source_code_path, project_name, fixed_commit):
+        """
+        Index source code for a specific commit (the commit before the fix)
+        :param source_code_path: Path to the directory containing Java source files
+        :param project_name: Name of the project to use in the index
+        :param fixed_commit: The commit hash where the bug was fixed
+        """
+        print(f"Starting to index source code from: {source_code_path}")
+        print(f"Project name: {project_name}")
+        print(f"Fixed commit: {fixed_commit}")
+        
+        # Create an instance of the Indexer
+        indexer = Indexer()
+        
+        # First, checkout the commit before the fix
+        if not indexer.checkout_commit_before_fix(source_code_path, fixed_commit):
+            print(f"Failed to checkout commit before {fixed_commit}, skipping indexing...")
+            return False
+        
+        # Counter for indexed files
+        indexed_count = 0
+        
+        # Walk through the source code directory
+        for root, dirs, files in tqdm(os.walk(source_code_path), desc="Scanning directories"):
+            for file in files:
+                if file.endswith('.java'):
+                    file_path = os.path.join(root, file)
+                    
+                    try:
+                        # Read the source code file
+                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            source_code = f.read()
+                        
+                        # Get the relative file URL (path from source_code_path)
+                        file_url = os.path.relpath(file_path, source_code_path)
+                        
+                        # Index the file using bulk indexing for better performance
+                        indexer.bulk_index(
+                            project=project_name,
+                            source_code=source_code,
+                            file_url=file_url,
+                            fixed_commit=fixed_commit
+                        )
+                        
+                        indexed_count += 1
+                        
+                    except Exception as e:
+                        print(f"Error reading file {file_path}: {e}")
+                        continue
+        
+        # Refresh the indexer to flush any remaining documents
+        indexer.refresh()
+        
+        print(f"Successfully indexed {indexed_count} Java files for project: {project_name}, fixed_commit: {fixed_commit}")
+        return True
+
     def index_source_code(self, source_code_path, project_name):
         """
-        TODO: Index all Java files from the specified source code path
+        Legacy method for backward compatibility - indexes current state of source code
         :param source_code_path: Path to the directory containing Java source files
         :param project_name: Name of the project to use in the index
         """
@@ -117,12 +173,13 @@ class Index_Creator:
                         
                         # Get the relative file URL (path from source_code_path)
                         file_url = os.path.relpath(file_path, source_code_path)
-                        # print(file_url)
+                        
                         # Index the file using bulk indexing for better performance
                         indexer.bulk_index(
                             project=project_name,
                             source_code=source_code,
-                            file_url=file_url
+                            file_url=file_url,
+                            fixed_commit="current"  # Use "current" for legacy indexing
                         )
                         
                         indexed_count += 1
@@ -135,12 +192,15 @@ class Index_Creator:
         indexer.refresh()
         
         print(f"Successfully indexed {indexed_count} Java files for project: {project_name}")
+        return True
 
 
 if __name__ == '__main__':
     index_creator = Index_Creator()
     index_creator.create_index(delete_if_exists=True)
-
-    source_code_path = "/Users/armin/Desktop/aspectj-master"
+    
+    # TODO: Add your source code path, project name, and fixed commit here
+    source_code_path = "/Users/armin/Desktop/test-aspect/aspectj"
     project_name = "aspectj"
-    index_creator.index_source_code(source_code_path, project_name)
+    fixed_commit = "9319e34"
+    index_creator.index_source_code_for_commit(source_code_path, project_name, fixed_commit)

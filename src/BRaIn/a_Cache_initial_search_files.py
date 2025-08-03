@@ -39,6 +39,8 @@ def parse_xml_dataset(file_path):
                 bug['bug_title'] = value
             elif name == 'description':
                 bug['bug_description'] = value
+            elif name == 'commit':
+                bug['fixed_commit'] = value
             elif name == 'files':
                 # Parse files field - it contains file paths separated by whitespace
                 files = [f.strip() for f in value.split() if f.strip()]
@@ -60,16 +62,17 @@ def parse_xml_dataset(file_path):
                 bug['result'] = results
         
         # Only add bugs that have the required fields
-        if 'bug_id' in bug and 'bug_title' in bug and 'bug_description' in bug:
+        if 'bug_id' in bug and 'bug_title' in bug and 'bug_description' in bug and 'fixed_commit' in bug:
             bugs.append(bug)
     
     print(f"Parsed {len(bugs)} bugs from XML dataset")
     return bugs
 
-def perform_search(project, bug_title, bug_description, top_K_results=10):
+def perform_search(project, fixed_commit, bug_title, bug_description, top_K_results=10):
     searcher = Searcher('ye_et_al')  # Use the ye_et_al index
     search_results = searcher.search_Extended(
         project=project,
+        fixed_commit=fixed_commit,
         query=bug_title + '. ' + bug_description,
         top_K_results=top_K_results,
         field_to_return=["file_url", "source_code"]
@@ -168,12 +171,16 @@ if __name__ == '__main__':
             bug_title = bug['bug_title']
             bug_description = bug['bug_description']
             project = bug['project']
+            fixed_commit = bug['fixed_commit']
 
             # now search for the query in a method
-            search_results = perform_search(project, bug_title, bug_description, top_K_results=50)
+            search_results = perform_search(project, fixed_commit, bug_title, bug_description, top_K_results=50)
 
             # now, perform ops in the search results
             processed_results = search_result_ops(search_results)
+
+            if fixed_commit == '9319e34':
+                print(search_results)
 
             # add processed results to the bug as a new key
             bug['es_results'] = processed_results

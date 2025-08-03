@@ -32,13 +32,18 @@ class Searcher:
     def getElasicSearchClient(self):
         return self.es_client
 
-    def search(self, project, query, top_K_results=10):
+    def search(self, project, fixed_commit, query, top_K_results=10):
         search_query = {
                 "bool": {
                     "must": [
                         {
                             "match": {
                                 "project": project
+                            }
+                        },
+                        {
+                            "match": {
+                                "fixed_commit": fixed_commit
                             }
                         }
                     ],
@@ -63,13 +68,18 @@ class Searcher:
 
         return results_file_urls
 
-    def search_field(self, project, field_to_search, top_K_results=10, field_to_return = ["file_url"]):
+    def search_field(self, project, fixed_commit, field_to_search, top_K_results=10, field_to_return = ["file_url"]):
         search_query = {
                 "bool": {
                     "must": [
                         {
                             "match": {
                                 "project": project
+                            }
+                        },
+                        {
+                            "match": {
+                                "fixed_commit": fixed_commit
                             }
                         },
                         {
@@ -97,13 +107,18 @@ class Searcher:
 
         return result_dict_arr
 
-    def search_Extended(self, project, query, top_K_results=10, field_to_return=["file_url"]):
+    def search_Extended(self, project, fixed_commit, query, top_K_results=10, field_to_return=["file_url"]):
         search_query = {
                 "bool": {
                     "must": [
                         {
                             "match": {
                                 "project": project
+                            }
+                        },
+                        {
+                            "match": {
+                                "fixed_commit": fixed_commit
                             }
                         }
                     ],
@@ -129,12 +144,12 @@ class Searcher:
             project = source.get("project")
             source_code = source.get("source_code")
             file_url = source.get("file_url")
+            fixed_commit = source.get("fixed_commit")
             bm_score = hit.get("_score")
 
-            result_dict.append({"project": project, "source_code": source_code, "file_url": file_url, "doc_id": doc_id, "bm25_score": bm_score})
+            result_dict.append({"project": project, "source_code": source_code, "file_url": file_url, "fixed_commit": fixed_commit, "doc_id": doc_id, "bm25_score": bm_score})
 
         return result_dict
-
 
     def compiled_search_results(self, search_results):
 
@@ -155,7 +170,8 @@ if __name__ == '__main__':
 
     # Search for a query
     top_K_results = 10
-    search_results = searcher.search("aspectj", "AjBuildManager", 10)
+    # TODO: Update this example for your project and commit
+    search_results = searcher.search("aspectj", "9319e34", "AjBuildManager", 10)
 
     # Print the search results
     print(search_results)

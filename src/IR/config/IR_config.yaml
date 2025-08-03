@@ -1,11 +1,11 @@
 elasticsearch:
   host: localhost # default: please don't change this if not necessary
   port: 9200 # default: please don't change this if not necessary
-  #TODO
   index_name: ye_et_al
 
 
 Fields:
   project: keyword
   source_code: text
+  fixed_commit: keyword
   file_url: keyword
