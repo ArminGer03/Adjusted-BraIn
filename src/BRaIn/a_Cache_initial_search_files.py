@@ -179,8 +179,8 @@ if __name__ == '__main__':
             # now, perform ops in the search results
             processed_results = search_result_ops(search_results)
 
-            if fixed_commit == '9319e34':
-                print(search_results)
+            # if fixed_commit == '9319e34':
+            #     print(search_results)
 
             # add processed results to the bug as a new key
             bug['es_results'] = processed_results

@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 import os
+import xml.etree.ElementTree as ET
 from tqdm import tqdm
 
 from src.IR.config.Elasic_Config_Loader import Elasic_Config_Loader
@@ -88,6 +89,77 @@ class Index_Creator:
             print(f"The index '{self.index_name}' was created successfully.")
         else:
             print(f"Failed to create the index '{self.index_name}'.")
+
+    def parse_xml_dataset_for_commits(self, xml_file_path):
+        """
+        Parse the XML dataset to extract unique commit hashes
+        """
+        print(f"Parsing XML dataset to extract commits: {xml_file_path}")
+        
+        # Read the XML file
+        with open(xml_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Parse the XML content
+        root = ET.fromstring(content)
+        
+        commits = set()
+        
+        # Find all table elements (each represents a bug)
+        for table in root.findall('.//table'):
+            # Extract commit from column elements
+            for column in table.findall('column'):
+                name = column.get('name')
+                value = column.text.strip() if column.text else ""
+                
+                if name == 'commit':
+                    commits.add(value)
+                    break
+        
+        commits_list = list(commits)
+        print(f"Found {len(commits_list)} unique commits in dataset")
+        return commits_list
+
+    def index_all_commits_from_dataset(self, source_code_path, project_name, xml_dataset_path):
+        """
+        Index source code for all commits found in the dataset
+        :param source_code_path: Path to the git repository
+        :param project_name: Name of the project
+        :param xml_dataset_path: Path to the XML dataset file
+        """
+        print(f"Starting to index all commits from dataset")
+        print(f"Source code path: {source_code_path}")
+        print(f"Project name: {project_name}")
+        print(f"Dataset path: {xml_dataset_path}")
+        
+        # Parse the dataset to get all unique commits
+        commits = self.parse_xml_dataset_for_commits(xml_dataset_path)
+        
+        if not commits:
+            print("No commits found in dataset, exiting...")
+            return False
+        
+        # Index each commit
+        successful_indexes = 0
+        failed_indexes = 0
+        
+        for commit in tqdm(commits, desc="Indexing commits"):
+            try:
+                success = self.index_source_code_for_commit(source_code_path, project_name, commit)
+                if success:
+                    successful_indexes += 1
+                else:
+                    failed_indexes += 1
+            except Exception as e:
+                print(f"Error indexing commit {commit}: {e}")
+                failed_indexes += 1
+                continue
+        
+        print(f"Indexing completed!")
+        print(f"Successfully indexed: {successful_indexes} commits")
+        print(f"Failed to index: {failed_indexes} commits")
+        
+        return successful_indexes > 0
 
     def index_source_code_for_commit(self, source_code_path, project_name, fixed_commit):
         """
@@ -199,8 +271,8 @@ if __name__ == '__main__':
     index_creator = Index_Creator()
     index_creator.create_index(delete_if_exists=True)
     
-    # TODO: Add your source code path, project name, and fixed commit here
+    # Index all commits from the dataset
     source_code_path = "/Users/armin/Desktop/test-aspect/aspectj"
     project_name = "aspectj"
-    fixed_commit = "9319e34"
-    index_creator.index_source_code_for_commit(source_code_path, project_name, fixed_commit)
+    xml_dataset_path = "/Users/armin/Desktop/UCI/bug-localization-project/Codes/Adjusted-BRaIn/Adjusted-BraIn/Data/ye et al/aspectj.xml"
+    index_creator.index_all_commits_from_dataset(source_code_path, project_name, xml_dataset_path)
